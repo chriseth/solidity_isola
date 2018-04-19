@@ -173,6 +173,7 @@ about checks such as overflow only if they do not result in a state reversion.
 %
 One popular example is the SafeMath~\cite{SafeMath} contract which
 is commonly used to turn wrapping arithmetics into overflow-checked arithmetics:
+\todo{should we move that to ``future plans''?}
 
 \begin{verbatim}
   function add(uint256 a, uint256 b) internal pure
@@ -211,8 +212,59 @@ cannot.
 The component is also able to generate \code{smtlib2}~\cite{SMTLIB}
 formulas in order to interface with additional solvers.
 
+\subsection{Specific Examples}
 
+\todo{Put some specific examples here where the solver already is helpful.}
+
+reentrancy?
+
+unbounded gas costs?
+
+Talk about the fact that the compiler cannot generate false
+positives (or at least only false positives that can be removed
+by additional require statements) because it is not possible to
+disable warnings on purpose.
+
+The SMT component will be able to detect an error like the following,
+which contains an infinite loop that does not appear to be
+one at first sight: \todo{find more interesting example,
+which cannot be detected by looking at local types alone}
+\begin{verbatim}
+for (uint i = owners.length; i >= 0; i--)
+{
+    // ...
+}
+\end{verbatim}
+
+or also
+
+\begin{verbatim}
+if (a >= 7) { ... }
+else if (a >= 10) { ... }
+\end{verbatim}
+    
 \subsection{Future plans}
+
+Find good syntax for pre- and postconditions that should
+apply to all functions in the contract.
+Modifiers are good candidates for applying pre- and postconditions
+to individual functions and because of that, we are thinking
+about a clear way to apply a modifier to a whole range of functions.
+
+Some environment variables have a 256 bit unsigned integer type,
+although the range of their values is much more restricted in practice.
+For instance, the UNIX timestamp of the current block in seconds,
+\texttt{block.timestamp} will not exceed 64 bits for the next
+500 billion years. To reduce the false positives rate for
+overflows, it makes sense to restrict the value range for these
+variables in the SMT encoding. It is an open question how to do
+this properly, since a straightforward hard cap at some point
+could create undesired artefacts around that point.
+Other environment variables that come to mind here are
+\texttt{block.number},
+
+
+
 
 Our current implementation plans for the component involve supporting
 a larger subset of the language, including more complex data structures
