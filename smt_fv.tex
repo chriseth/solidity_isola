@@ -295,16 +295,6 @@ As we can see, the number of total tokens never changes and the invariant
 $$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the beginning of any
 function of the contract.
 
-Function \emph{modifiers} are Solidity constructs that are used as patterns to
-change the behavior of functions, and in many cases, to restrict them.
-%
-Commonly used modifiers are, for example, allowing only the owner of the
-contract to execute the function, or executing a function if and only if the
-amount of Ether sent is greater than a certain value.
-%
-We intend to use properties inferred from modifiers as function preconditions,
-therefore improving proving power.
-
 The idea of \emph{Effective Callback Freeness} was recently introduced by
 \cite{Grossman}.
 %
