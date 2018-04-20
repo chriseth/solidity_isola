@@ -270,8 +270,22 @@ overflows, it makes sense to restrict the value range for these
 variables in the SMT encoding. It is an open question how to do
 this properly, since a straightforward hard cap at some point
 could create undesired artefacts around that point.
+%
 Another environment variable that could have a similar
 behavior is \texttt{block.number}.
+
+In many languages, complex data structures are only assigned by
+reference, creating two names for the same object and thus changes
+performed via one name also affect references via the second name.
+This is of course a big challenge for formal verification and
+is known as the \emph{aliasing problem}.
+This is also the case for some aspects of Solidity, but data stored
+in storage does not have this problem: The structure of
+storage is determined at compile-time, and all objects are
+statically allocated; while arrays can grow, their position in
+storage is fixed at compile-time. Because of that, the aliasing problem
+is not an issue, as long as we can assume that there are no hash
+collisions in keccak256 and dynamic arrays are small enough.
 
 One of the most interesting aspects we intend to research and support is
 multi-transaction invariants.
