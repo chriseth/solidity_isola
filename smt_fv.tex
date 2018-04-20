@@ -245,13 +245,23 @@ else if (a >= 10) { ... }
     
 \subsection{Future plans}
 
-Find good syntax for pre- and postconditions that should
-apply to all functions in the contract.
-Modifiers are good candidates for applying pre- and postconditions
-to individual functions and because of that, we are thinking
-about a clear way to apply a modifier to a whole range of functions.
+We introduce now the features that we intend to implement in the SMT module, as
+well as discuss arising research problems.
 
-Some environment variables have a 256 bit unsigned integer type,
+Our current implementation plans for the component involve supporting
+a larger subset of the language, including more complex data structures
+such as \code{mapping}.
+%
+This is especially important for cases such as token contracts, where
+properties such as funds leakage and wrong balance could be used as targets.
+
+The component is meant to be built as a Bounded Model Checker, unrolling loops
+up to a constant bound and automatically detecting bounds when possible.
+%
+We also intend to introduce a loop pre and postconditions syntax to help the
+unbounded case.
+
+Some Solidity environment variables have a 256 bit unsigned integer type,
 although the range of their values is much more restricted in practice.
 For instance, the UNIX timestamp of the current block in seconds,
 \texttt{block.timestamp} will not exceed 64 bits for the next
@@ -260,18 +270,8 @@ overflows, it makes sense to restrict the value range for these
 variables in the SMT encoding. It is an open question how to do
 this properly, since a straightforward hard cap at some point
 could create undesired artefacts around that point.
-Other environment variables that come to mind here are
-\texttt{block.number},
-
-
-
-
-Our current implementation plans for the component involve supporting
-a larger subset of the language, including more complex data structures
-such as \code{mapping}.
-%
-We intend to build the component as a Bounded Model Checker, unrolling loops
-up to a constant bound and automatically detecting bounds when possible.
+Another environment variable that could have a similar
+behavior is \texttt{block.number}.
 
 One of the most interesting aspects we intend to research and support is
 multi-transaction invariants.
@@ -294,6 +294,22 @@ same amount in another account.
 As we can see, the number of total tokens never changes and the invariant
 $$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the beginning of any
 function of the contract.
+
+A feature that promises to help the computation of state variable invariants
+(discussed above) is pre and postconditions for functions.
+%
+The first challenge is finding a good syntax to represent the conditions.
+%
+Modifiers (Sec.\ref{section:solidity}) are a natural candidate for that, given
+their ability to behave as patterns that wrap functions.
+%
+The modifier \code{onlyOwner} introduced in Sec.~\ref{section:solidity} acts
+exactly as a precondition for any function that uses it, therefore we can
+encode it as the predicate $onlyOwner(f)$ which is conjoined with the encoding
+of function \code{f}.
+%
+With this feature we intend to compute functions pre and postconditions
+automatically.
 
 The idea of \emph{Effective Callback Freeness} was recently introduced by
 \cite{Grossman}.
