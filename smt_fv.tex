@@ -214,7 +214,44 @@ formulas in order to interface with additional solvers.
 
 \subsection{Specific Examples}
 
+\todo{I'm in general not sure about this section. If we put examples that we
+can already verify, there aren't many. If we put examples of things we are not
+yet able to verify, shouldn't they be in future plans?}
+
 \todo{Put some specific examples here where the solver already is helpful.}
+
+Even though the current implementation of the SMT module supports a small
+subset of Solidity, it can already be used to detect flaws that might be
+overlooked by the user.
+%
+We present now a few examples of buggy code that the compiler is already able
+to detect.
+
+The following loop is infinite due to variable \code{i} being unsigned.
+%
+In that case, the user receives a message about the loop's condition being
+always true.
+\todo{maybe find more interesting example,
+which cannot be detected by looking at local types alone}
+
+\begin{verbatim}
+for (uint i = owners.length; i >= 0; i--)
+{
+    // ...
+}
+\end{verbatim}
+
+Another type of problem that the compiler already finds automatically is
+unreachable code.
+%
+In the following control-flow expressions, it warns the user that the condition
+in the \code{else if} is unreachable.
+
+\begin{verbatim}
+if (a >= 7) { ... }
+else if (a >= 10) { ... }
+\end{verbatim}
+
 
 reentrancy?
 
@@ -225,23 +262,8 @@ positives (or at least only false positives that can be removed
 by additional require statements) because it is not possible to
 disable warnings on purpose.
 
-The SMT component will be able to detect an error like the following,
-which contains an infinite loop that does not appear to be
-one at first sight: \todo{find more interesting example,
-which cannot be detected by looking at local types alone}
-\begin{verbatim}
-for (uint i = owners.length; i >= 0; i--)
-{
-    // ...
-}
-\end{verbatim}
-
 or also
 
-\begin{verbatim}
-if (a >= 7) { ... }
-else if (a >= 10) { ... }
-\end{verbatim}
     
 \subsection{Future plans}
 
