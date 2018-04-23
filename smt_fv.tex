@@ -252,19 +252,8 @@ if (a >= 7) { ... }
 else if (a >= 10) { ... }
 \end{verbatim}
 
+\todo{maybe another example, using require/assert}
 
-reentrancy?
-
-unbounded gas costs?
-
-Talk about the fact that the compiler cannot generate false
-positives (or at least only false positives that can be removed
-by additional require statements) because it is not possible to
-disable warnings on purpose.
-
-or also
-
-    
 \subsection{Future plans}
 
 We introduce now the features that we intend to implement in the SMT module, as
@@ -276,13 +265,14 @@ such as \code{mapping}.
 %
 This is especially important for cases such as token contracts, where
 properties such as funds leakage and wrong balance could be used as targets.
-
+%
 The component is meant to be built as a Bounded Model Checker, unrolling loops
 up to a constant bound and automatically detecting bounds when possible.
 %
 We also intend to introduce a loop pre and postconditions syntax to help the
 unbounded case.
 
+\begin{paragraph}{Range restriction of real life values.}
 Some Solidity environment variables have a 256 bit unsigned integer type,
 although the range of their values is much more restricted in practice.
 For instance, the UNIX timestamp of the current block in seconds,
@@ -295,7 +285,9 @@ could create undesired artefacts around that point.
 %
 Another environment variable that could have a similar
 behavior is \texttt{block.number}.
+\end{paragraph}
 
+\begin{paragraph}{Aliasing.}
 In many languages, complex data structures are only assigned by
 reference, creating two names for the same object and thus changes
 performed via one name also affect references via the second name.
@@ -308,7 +300,9 @@ statically allocated; while arrays can grow, their position in
 storage is fixed at compile-time. Because of that, the aliasing problem
 is not an issue, as long as we can assume that there are no hash
 collisions in keccak256 and dynamic arrays are small enough.
+\end{paragraph}
 
+\begin{paragraph}{Multi-transaction invariants.}
 One of the most interesting aspects we intend to research and support is
 multi-transaction invariants.
 %
@@ -331,6 +325,10 @@ As we can see, the number of total tokens never changes and the invariant
 $$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the beginning of any
 function of the contract.
 
+\todo{Add another more interesting example, maybe with a diagram}
+\end{paragraph}
+
+\begin{paragraph}{Modifiers as pre-postconditions.}
 A feature that promises to help the computation of state variable invariants
 (discussed above) is pre and postconditions for functions.
 %
@@ -346,7 +344,9 @@ of function \code{f}.
 %
 With this feature we intend to compute functions pre and postconditions
 automatically.
+\end{paragraph}
 
+\begin{paragraph}{Effective Callback Freeness.}
 The idea of \emph{Effective Callback Freeness} was recently introduced by
 \cite{Grossman}.
 %
@@ -361,3 +361,5 @@ contract's state variables still holds even after calling external contracts
 with unknown behavior.
 %
 We intend to study how to integrate this approach to our static analysis.
+\end{paragraph}
+
