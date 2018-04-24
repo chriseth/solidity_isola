@@ -167,30 +167,6 @@ contract C
 \caption{SMT encoding of an assertion check.}
 \end{figure}
 
-It is important to highlight that errors are irrelevant if they result in a
-state change reversion (Sec.~\ref{section:smart_contracts}). The user should be warned
-about checks such as overflow only if they do not result in a state reversion.
-%
-One popular example is the SafeMath~\cite{SafeMath} contract which
-is commonly used to turn wrapping arithmetics into overflow-checked arithmetics:
-\todo{should we move that to ``future plans''?}
-
-\begin{verbatim}
-  function add(uint256 a, uint256 b) internal pure
-        returns (uint256) {
-    uint256 c = a + b;
-    require(c >= a);
-    return c;
-  }
-\end{verbatim}
-
-Although the tool detects an overflow in the computation of \code{a + b},
-the overflow will result in a truncation of \code{c} in two's complement and thus
-any execution that contains the overflow will revert at the \code{require}.
-%
-In this case the user should not be warned of the error, since no erroneous cases
-exist in accepted executions.
-
 As described above, the component performs several local checks during a single
 run, therefore it is critical that the used SMT solver supports
 incremental checking.
@@ -214,12 +190,6 @@ formulas in order to interface with additional solvers.
 
 \subsection{Specific Examples}
 
-\todo{I'm in general not sure about this section. If we put examples that we
-can already verify, there aren't many. If we put examples of things we are not
-yet able to verify, shouldn't they be in future plans?}
-
-\todo{Put some specific examples here where the solver already is helpful.}
-
 Even though the current implementation of the SMT module supports a small
 subset of Solidity, it can already be used to detect flaws that might be
 overlooked by the user.
@@ -227,15 +197,14 @@ overlooked by the user.
 We present now a few examples of buggy code that the compiler is already able
 to detect.
 
-The following loop is infinite due to variable \code{i} being unsigned.
+The following loop is infinite because the author of the code
+forget to increment the loop variablee \code{i}.
 %
 In that case, the user receives a message about the loop's condition being
-always true.
-\todo{maybe find more interesting example,
-which cannot be detected by looking at local types alone}
+always true for the case where \code{owners.length} is not zero.
 
 \begin{verbatim}
-for (uint i = owners.length; i >= 0; i--)
+for (uint i = 0; i < owners.length;)
 {
     // ...
 }
@@ -285,6 +254,31 @@ could create undesired artefacts around that point.
 %
 Another environment variable that could have a similar
 behavior is \texttt{block.number}.
+\end{paragraph}
+
+\begin{paragraph}{Revert after Error.}
+Errors are irrelevant if they result in a state change reversion
+(Sec.~\ref{section:smart_contracts}). The user should be warned
+about failing checks such as overflow only if they do not result in a state reversion.
+%
+One popular example is the SafeMath~\cite{SafeMath} contract which
+is commonly used to turn wrapping arithmetics into overflow-checked arithmetics:
+
+\begin{verbatim}
+  function add(uint256 a, uint256 b) internal pure
+        returns (uint256) {
+    uint256 c = a + b;
+    require(c >= a);
+    return c;
+  }
+\end{verbatim}
+
+Although the tool detects an overflow in the computation of \code{a + b},
+the overflow will result in a truncation of \code{c} in two's complement and thus
+any execution that contains the overflow will revert at the \code{require}.
+%
+In this case the user should not be warned of the error, since no erroneous cases
+exist in accepted executions.
 \end{paragraph}
 
 \begin{paragraph}{Aliasing.}
@@ -352,6 +346,7 @@ The idea of \emph{Effective Callback Freeness} was recently introduced by
 %
 A smart contract $C$ is effectively callback free, if any state change caused
 by an internal callback can also be caused by an execution that does not have this callback.
+\todo{should we rephrase this now that we know more?}
 %
 The authors show that most of the contracts deployed on Ethereum have this
 property.
