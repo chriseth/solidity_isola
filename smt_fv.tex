@@ -226,7 +226,8 @@ else if (a >= 10) { ... }
 \subsection{Future plans}
 
 We introduce now the features that we intend to implement in the SMT module, as
-well as discuss arising research problems.
+well as discuss arising research problems where we present simple examples that
+highlight how the new features will work.
 
 Our current implementation plans for the component involve supporting
 a larger subset of the language, including more complex data structures
@@ -306,20 +307,99 @@ contract's storage) considering any arbitrary number of calls to the contract.
 This would enable these invariants to be used as preconditions whenever they
 are accessed.
 %
-As an example, take contract \code{Token} from Sec.~\ref{section:solidity}.
+Fig.~\ref{fig:invariant_a} presents an example contract with a state variable
+\code{a} which can be assigned differently depending on which public function
+is called.
+%
+We can see that if we consider all possible paths, \code{a} is never greater
+than 4, so the invariant $a \le 4$ holds.
+%
+Currently, without the discovery of the invariant, the SMT module reports an
+overflow case in the \code{return} statement of function \code{plusA}.
+%
+If the invariant is used as a pre-condition of the function, by adding
+\code{require(a <= 4)}, for example, no overflow is reported.
+
+\begin{figure}
+\begin{verbatim}
+contract C
+{
+  uint a;
+
+  constructor () public {}
+
+  function a1() public { a = 1; }
+  function a2() public { a = 2; }
+  function a3() public { a = 3; }
+  function a4() public { a = 4; }
+
+  function plusA(uint x) public view returns (uint) {
+    require(x < 1000);
+    return a + x;
+  }
+}
+\end{verbatim}
+\caption{Contract with a storage variable invariant.}
+\label{fig:invariant_a}
+\end{figure}
+
+Another example is contract \code{Token} from Sec.~\ref{section:solidity}.
 %
 We can see from the constructor that the deployer of the contract receives
 10000 tokens.
 %
-The only way to move tokens is via the function \code{transfer}, which decreases a
-certain amount of tokens from one account, if it owns enough, and increases the
-same amount in another account.
+The only way to move tokens is via the function \code{transfer}, which
+decreases a certain amount of tokens from one account, if it owns enough, and
+increases the same amount in another account.
 %
 As we can see, the number of total tokens never changes and the invariant
-$$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the beginning of any
-function of the contract.
+$$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the
+beginning of any function of the contract.
+\end{paragraph}
 
-\todo{Add another more interesting example, maybe with a diagram}
+\begin{paragraph}{Post-constructor invariants.}
+A special and more restrict case of multi-transaction invariants usage are
+contracts where a state variable is assigned in the constructor and never
+modified again.
+%
+Take, for instance, the contract presented in Fig.~\ref{fig:constructor}.
+%
+We can see that the state variable \code{x} is assigned parameter \code{y}
+received by the constructor, having the constraint that $y < 1000$.
+%
+Since no other function modifies \code{x}, we can see that $x < 1000$ is an
+invariant.
+%
+Without this invariant, the SMT component reports a potential overflow in
+function \code{plusX}, and is not able to prove the assertion.
+%
+The invariant can be represented as an extra \code{require(x < 1000);} in the
+beginning of function \code{plusX}, which then leads to no overflow being
+reported and the assertion proven.
+
+\begin{figure}
+\begin{verbatim}
+  contract C
+  {
+    uint x;
+
+    constructor (uint y) {
+      require(y < 1000);
+      x = y;
+    }
+
+    function plusX(uint a) returns (uint) {
+      require(a < 1000);
+      assert(x + a < 2000);
+      return x + a;
+    }
+
+}
+\end{verbatim}
+\caption{Contract with a post-contructor invariant.}
+\label{fig:constructor}
+\end{figure}
+
 \end{paragraph}
 
 \begin{paragraph}{Modifiers as pre-postconditions.}
