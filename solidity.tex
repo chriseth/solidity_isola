@@ -25,11 +25,13 @@ cryptographic signature on the transaction that is sent through the network.
 contract Token {
     /// The main balances / accounting mapping.
     mapping(address => uint256) balances;
+    uint totalSupply;
 
     /// Create the token contract crediting `msg.sender` with
     /// 10000 tokens.
     constructor() public {
-        balances[msg.sender] = 10000;
+        totalSupply = 10000;
+        balances[msg.sender] = totalSupply;
     }
 
     /// Transfer `_value` tokens from `msg.sender` to `_to`.
