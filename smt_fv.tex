@@ -1,4 +1,4 @@
-\section{SMT-based Solidity verification}
+\section{SMT-based Solidity Verification}
 \label{section:smt}
 
 SMT solvers are powerful tools to prove satisfiability of formulas in different
@@ -14,7 +14,7 @@ program.
 The goal of the translation from Solidity to SMT formulas is to verify safety
 properties from the Solidity program by performing queries to the SMT solver.
 
-\subsection{SMT encoding}
+\subsection{SMT Encoding}
 
 The SMT encoding is computed during a depth-first traversal of the
 abstract syntax tree (AST) of the
@@ -223,10 +223,11 @@ else if (a >= 10) { ... }
 
 \todo{maybe another example, using require/assert}
 
-\subsection{Future plans}
+\subsection{Future Plans}
 
 We introduce now the features that we intend to implement in the SMT module, as
-well as discuss arising research problems.
+well as discuss arising research problems where we present simple examples that
+highlight how the new features will work.
 
 Our current implementation plans for the component involve supporting
 a larger subset of the language, including more complex data structures
@@ -306,20 +307,87 @@ contract's storage) considering any arbitrary number of calls to the contract.
 This would enable these invariants to be used as preconditions whenever they
 are accessed.
 %
-As an example, take contract \code{Token} from Sec.~\ref{section:solidity}.
+Fig.~\ref{fig:invariant_a} presents an example contract with a state variable
+\code{a} which can be assigned differently depending on which public function
+is called.
 %
-We can see from the constructor that the deployer of the contract receives
-10000 tokens.
+We can see that if we consider all possible paths, \code{a} is never greater
+than 4, so the invariant $a \le 4$ holds.
 %
-The only way to move tokens is via the function \code{transfer}, which decreases a
-certain amount of tokens from one account, if it owns enough, and increases the
-same amount in another account.
+Currently, without the discovery of the invariant, the SMT module reports an
+overflow case in the \code{return} statement of function \code{plusA}.
 %
-As we can see, the number of total tokens never changes and the invariant
-$$\sum_{a \in \mathrm{balances}} \mathrm{balances}[a] = 10000$$ holds in the beginning of any
-function of the contract.
+If the invariant is used as a pre-condition of the function, by adding
+\code{require(a <= 4)}, for example, no overflow is reported.
+%
+The SMT component should in the future be able to automatically infer these
+invariants.
 
-\todo{Add another more interesting example, maybe with a diagram}
+\begin{figure}
+\begin{verbatim}
+contract C
+{
+  uint a;
+
+  constructor () public {}
+
+  function a1() public { a = 1; }
+  function a2() public { a = 2; }
+  function a3() public { a = 3; }
+  function a4() public { a = 4; }
+
+  function plusA(uint x) public view returns (uint) {
+    require(x < 1000);
+    return a + x;
+  }
+}
+\end{verbatim}
+\caption{Contract with a storage variable invariant.}
+\label{fig:invariant_a}
+\end{figure}
+
+\end{paragraph}
+
+\begin{paragraph}{Post-constructor invariants.}
+A special and restricted case of multi-transaction invariants usage are
+contracts where a state variable is assigned in the constructor and never
+modified again.
+%
+A common example is contract \code{Token} from Sec.~\ref{section:solidity}.
+%
+We can see from the constructor that the \code{totalSupply} of tokens is 10000,
+which is also the initial amount of tokens given to the deployer of the
+contract.
+%
+The only way to move tokens is via the function \code{transfer}, which
+decreases a certain amount of tokens from one account, if it owns enough, and
+increases the same amount in another account.
+%
+We can modify function \code{transfer} to use the invariant about state
+variable \code{totalSupply}:
+
+\begin{verbatim}
+function transfer(address _to, uint256 _value) public {
+    require(balances[msg.sender] >= _value);
+    uint256 sumBefore = balances[msg.sender] + balances[_to];
+    totalSupply -= sumBefore;
+    balances[msg.sender] -= _value;
+    balances[_to] += _value;
+    uint256 sumAfter = balances[msg.sender] + balances[_to];
+    totalSupply += sumAfter;
+    assert(sumBefore == sumAfter);
+    assert(totalSupply == 10000);
+}
+\end{verbatim}
+
+As we can see, the number of total tokens never changes and the invariant
+$\mathrm{totalSupply} = 10000$ holds in the beginning of any function of the
+contract.
+%
+Similarly to the previous example, it is not possible to prove the last
+assertion without the knowledge about the invariant.
+
+
 \end{paragraph}
 
 \begin{paragraph}{Modifiers as pre-postconditions.}
