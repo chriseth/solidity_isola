@@ -194,7 +194,7 @@ Even though the current implementation of the SMT module supports a small
 subset of Solidity, it can already be used to detect flaws that might be
 overlooked by the user.
 %
-We shorty present now a few examples of buggy code that the compiler is able to
+We present now a few examples of buggy code that the compiler is able to
 detect regarding constant conditions, overflow, and assertion checking.
 
 The following loop is infinite because the author of the code
@@ -252,9 +252,12 @@ function f(bool a, bool b) public pure {
     if (b) c = true;
     else c = false;
   }
-  assert(c == ((a && !b) || (!a && b)));
+  assert(c != ((a && !b) || (!a && b)));
 }
 \end{verbatim}
+
+Note that the assertion is incorrect, where the correct assertion is
+\code{assert(c == ((a \&\& !b) || (!a \&\& b)));}.
 
 \subsection{Future Plans}
 
