@@ -194,11 +194,11 @@ Even though the current implementation of the SMT module supports a small
 subset of Solidity, it can already be used to detect flaws that might be
 overlooked by the user.
 %
-We present now a few examples of buggy code that the compiler is already able
-to detect.
+We present now a few examples of buggy code that the compiler is able to
+detect.
 
 The following loop is infinite because the author of the code
-forget to increment the loop variablee \code{i}.
+forgot to increment the loop variablee \code{i}.
 %
 In that case, the user receives a message about the loop's condition being
 always true for the case where \code{owners.length} is not zero.
@@ -210,8 +210,8 @@ for (uint i = 0; i < owners.length;)
 }
 \end{verbatim}
 
-Another type of problem that the compiler already finds automatically is
-unreachable code.
+Another type of problem that the compiler finds automatically is unreachable
+code.
 %
 In the following control-flow expressions, it warns the user that the condition
 in the \code{else if} is unreachable.
@@ -387,25 +387,57 @@ contract.
 Similarly to the previous example, it is not possible to prove the last
 assertion without the knowledge about the invariant.
 
-
 \end{paragraph}
 
-\begin{paragraph}{Modifiers as pre-postconditions.}
-A feature that promises to help the computation of state variable invariants
-(discussed above) is pre and postconditions for functions.
-%
-The first challenge is finding a good syntax to represent the conditions.
+\begin{paragraph}{Modifiers as pre and postconditions.}
+An orthogonal approach to automatically inferred invariants is to provide a
+good syntax so that Solidity programmers can explicitly state pre and
+postconditions of functions.
 %
 Modifiers (Sec.\ref{section:solidity}) are a natural candidate for that, given
 their ability to behave as patterns that wrap functions.
 %
-The modifier \code{onlyOwner} introduced in Sec.~\ref{section:solidity} acts
-exactly as a precondition for any function that uses it, therefore we can
-encode it as the predicate $onlyOwner(f)$ which is conjoined with the encoding
-of function \code{f}.
+In the following code, the modifier \code{safeBalance} states pre and
+postconditions for the \code{transfer} function in the \code{Token} contract
+(Sec.~\ref{section:solidity}), ensuring that the concrete value of
+\code{totalSupply} does not change after a token transfer.
+
+\begin{verbatim}
+modifier safeBalance {
+  require(totalSupply == 10000);
+  _;
+  assert(totalSupply == 10000);
+}
+
+function transfer(address _to, uint256 _value) safeBalance {
+  ...
+}
+\end{verbatim}
+\end{paragraph}
+
+\begin{paragraph}{Function abstraction.}
+An implication of the usage of modifiers as pre and postconditions, as
+described above, is the possibility of modifier-based function abstraction.
 %
-With this feature we intend to compute functions pre and postconditions
-automatically.
+Let \code{zeroAccount} be a function from contract \code{Token} that transfers
+all the tokens that an account holds to another one of their choice.
+%
+Function \code{zeroAccount} should also be sure that the \code{totalSupply} did
+not change.
+
+\begin{verbatim}
+function zeroAccount(address _to) {
+  transfer(_to, balance[msg.sender]);
+  assert(totalSupply == 10000);
+}
+\end{verbatim}
+
+One approach to analyze \code{zeroAccount} is to abstract function
+\code{transfer} by encoding only its modifiers and ignoring its body when
+trying to prove the assertion.
+%
+This query is much cheaper for the SMT solver, and in many cases (as it is in
+this one) it might be enough to prove the assertion.
 \end{paragraph}
 
 \begin{paragraph}{Effective Callback Freeness.}

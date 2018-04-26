@@ -42,7 +42,7 @@ contract Token {
     }
 }
 \end{verbatim}
-\caption{Example of a token contract}
+\caption{Example of a token contract.}
 \label{fig:tokenContract}
 \end{figure}
 
@@ -95,13 +95,14 @@ Commonly used modifiers are, for example, allowing only the owner of the
 contract to execute the function, or executing a function if and only if the
 amount of Ether sent is greater than a certain value.
 %
-The following example shows a contract using the former, where function
-\code{f} is executed if and only if the original deployer of the contract is
-the caller.
+Fig.~\ref{fig:modifiers} shows a contract using the former, where the
+execution of function \code{f} continues if and only if the original deployer
+of the contract is the caller.
 %
 We discuss later how to use modifiers to represent function pre- and
 postconditions.
 
+\begin{figure}
 \begin{verbatim}
 contract C
 {
@@ -124,3 +125,7 @@ contract C
   }
 }
 \end{verbatim}
+\caption{Example of modifiers.}
+\label{fig:modifiers}
+\end{figure}
+
