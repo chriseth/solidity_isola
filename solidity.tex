@@ -25,7 +25,7 @@ cryptographic signature on the transaction that is sent through the network.
 contract Token {
     /// The main balances / accounting mapping.
     mapping(address => uint256) balances;
-    uint totalSupply;
+    uint256 totalSupply;
 
     /// Create the token contract crediting `msg.sender` with
     /// 10000 tokens.
@@ -55,8 +55,8 @@ In general, invalid input should be caught via a failing \texttt{require}.
 The related \texttt{assert} statement can be used to check postconditions.
 The idea behind is that it should never be possible to reach a failing
 assert.
-\texttt{assert} essentially\footnote{There are two main differences however: As opposed to \texttt{require},
-\texttt{assert} will result in all remainder \emph{gas} to be consumed and \texttt{require} allows a custom message to be returned.}
+\texttt{assert} essentially\footnote{As opposed to \texttt{require},
+\texttt{assert} will result in all remaining \emph{gas} to be consumed.}
 has the same effect as \texttt{require}, but
 is encoded differently in the bytecode. Verification tools on bytecode
 level (as opposed to the high-level approach described in this article)
@@ -86,9 +86,9 @@ failing. In this specific example, though, the amount of available tokens
 is too small for this to happen.
 
 Another important feature that we refer to later in this paper are
-\emph{modifiers}.
+\emph{function modifiers}.
 %
-Function modifiers are Solidity constructs that are used as patterns to
+These are Solidity constructs that are used as patterns to
 change the behavior of functions, and in many cases, to restrict them.
 %
 Commonly used modifiers are, for example, allowing only the owner of the
