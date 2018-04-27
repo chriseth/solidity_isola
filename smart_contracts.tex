@@ -9,7 +9,7 @@ tokens which can have a currency-like aspect, any mechanisms that build
 on top of these tokens like exchanges and auctions or also decentralized
 tamper-proof registry systems like a domain name system.
 
-Each smart contract has an \emph{address} under which its \emph{code}, Ethereum's native token, Ether, balance,
+Each smart contract has an \emph{address} under which, among other things, its \emph{code},
 and a key-value store of data (\emph{storage}) are stored. The code is fixed after the creation phase
 and only the smart contract itself can modify the data stored at its address.
 
@@ -28,9 +28,9 @@ Since it would otherwise be easy to stall the network by asking it to
 execute a complex task, the resources consumed are metered during execution
 in a unit called \emph{gas}. Each transaction only provides a certain
 amount of gas, which acts as a \emph{gas limit}. If execution is terminated via the \emph{stop} instruction,
-any remainder gas is refunded and the transaction is successful.
-However if an exceptional condition or this \emph{gas limit} is reached without
-prior termination, any effect of the transaction is reverted and is marked as a failure.
+any remaining gas is refunded and the transaction is successful.
+However, if an exceptional condition or this \emph{gas limit} is reached without
+prior termination, any effect of the transaction is reverted and it is marked as a failure.
 In every case, the user
 who requested the execution pays for it with Ethereum's native token,
 Ether, proportionally to the amount of gas consumed.
