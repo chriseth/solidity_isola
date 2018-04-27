@@ -338,6 +338,29 @@ is not an issue, as long as we can assume that there are no hash
 collisions in keccak256 and dynamic arrays are small enough.
 \end{paragraph}
 
+\begin{figure}[h]
+\begin{verbatim}
+contract C
+{
+  uint a;
+
+  constructor () public {}
+
+  function a1() public { a = 1; }
+  function a2() public { a = 2; }
+  function a3() public { a = 3; }
+  function a4() public { a = 4; }
+
+  function plusA(uint x) public view returns (uint) {
+    require(x < 1000);
+    return a + x;
+  }
+}
+\end{verbatim}
+\caption{Contract with a storage variable invariant.}
+\label{fig:invariant_a}
+\end{figure}
+
 \begin{paragraph}{Multi-transaction invariants.}
 One of the most interesting aspects we intend to research and support is
 multi-transaction invariants.
@@ -363,29 +386,6 @@ If the invariant is used as a pre-condition of the function, by adding
 %
 The SMT component should in the future be able to automatically infer these
 invariants.
-
-\begin{figure}
-\begin{verbatim}
-contract C
-{
-  uint a;
-
-  constructor () public {}
-
-  function a1() public { a = 1; }
-  function a2() public { a = 2; }
-  function a3() public { a = 3; }
-  function a4() public { a = 4; }
-
-  function plusA(uint x) public view returns (uint) {
-    require(x < 1000);
-    return a + x;
-  }
-}
-\end{verbatim}
-\caption{Contract with a storage variable invariant.}
-\label{fig:invariant_a}
-\end{figure}
 
 \end{paragraph}
 
