@@ -231,7 +231,7 @@ The overflow can be prevented with a \code{require} statement.
 
 \begin{verbatim}
 function addFunds(uint256 _amount) {
-  // require(_amount < 1000000 && funds < 1000000);
+  // require((_amount + funds) >= funds);
   funds += _amount;
 }
 \end{verbatim}
