@@ -227,10 +227,11 @@ parameters of public functions are used.
 The code below may easily lead to an overflow, which the tool reports with a
 counterexample.
 %
-The overflow can be fixed with a \code{require} statement.
+The overflow can be prevented with a \code{require} statement.
 
 \begin{verbatim}
 function addFunds(uint256 _amount) {
+  // require(_amount < 1000000 && funds < 1000000);
   funds += _amount;
 }
 \end{verbatim}
@@ -238,8 +239,9 @@ function addFunds(uint256 _amount) {
 One of the most important features is the ability to check safety properties
 statically, by using Solidity's \code{assert}.
 %
-The following example code uses an \code{assert} to check the correctness of an
-$xor$ operation written as control-flow.
+The following example code uses an \code{assert} to check the equivalence of
+two computations, once written using control-flow statements, once as a direct
+Boolean formula.
 
 \begin{verbatim}
 function f(bool a, bool b) public pure {
@@ -256,7 +258,10 @@ function f(bool a, bool b) public pure {
 }
 \end{verbatim}
 
-Note that the assertion is incorrect, where the correct assertion is
+Note that the assertion will be reported to fail with the valuation
+\code{a = false, b = false, c = false}.
+%
+The safe condition would be
 \code{assert(c == ((a \&\& !b) || (!a \&\& b)));}.
 
 \subsection{Future Plans}
@@ -452,8 +457,8 @@ function transfer(address _to, uint256 _value) safeBalance {
 \end{paragraph}
 
 \begin{paragraph}{Function abstraction.}
-An implication of the usage of modifiers as pre and postconditions, as
-described above, is the possibility of modifier-based function abstraction.
+If modifiers are used as pre and postconditions as described above, it could be
+possible to abstract functions based on these modifiers.
 %
 Let \code{zeroAccount} be a function from contract \code{Token} that transfers
 all the tokens that an account holds to another one of their choice.
@@ -480,11 +485,14 @@ this one) it might be enough to prove the assertion.
 The idea of \emph{Effective Callback Freeness} was recently introduced by
 \cite{Grossman}.
 %
-A smart contract $C$ is effectively callback free, if its internal callbacks do
-not modify any state variables.
+A smart contract $C$ is effectively callback free, if any state change caused
+by a callback in $C$ can also be caused by an execution that does not have this
+callback.
 %
-A straightforward example is a contract that uses a mutex mechanism to disallow
-state changes if the function is called as a callback.
+Straightforward examples include a contract that uses a mutex mechanism to
+disallow state changes if the function is called as a callback, and the general
+pattern where all functions perform state changes before they call other
+contracts.
 %
 The authors show that most of the contracts deployed on Ethereum have this
 property.
