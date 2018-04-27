@@ -194,11 +194,11 @@ Even though the current implementation of the SMT module supports a small
 subset of Solidity, it can already be used to detect flaws that might be
 overlooked by the user.
 %
-We present now a few examples of buggy code that the compiler is already able
-to detect.
+We present now a few examples of buggy code that the compiler is able to
+detect regarding constant conditions, overflow, and assertion checking.
 
 The following loop is infinite because the author of the code
-forget to increment the loop variablee \code{i}.
+forgot to increment the loop variablee \code{i}.
 %
 In that case, the user receives a message about the loop's condition being
 always true for the case where \code{owners.length} is not zero.
@@ -210,8 +210,8 @@ for (uint i = 0; i < owners.length;)
 }
 \end{verbatim}
 
-Another type of problem that the compiler already finds automatically is
-unreachable code.
+Another type of problem that the compiler finds automatically is unreachable
+code.
 %
 In the following control-flow expressions, it warns the user that the condition
 in the \code{else if} is unreachable.
@@ -221,7 +221,48 @@ if (a >= 7) { ... }
 else if (a >= 10) { ... }
 \end{verbatim}
 
-\todo{maybe another example, using require/assert}
+Arithmetic operations should be checked against overflow, especially when
+parameters of public functions are used.
+%
+The code below may easily lead to an overflow, which the tool reports with a
+counterexample.
+%
+The overflow can be prevented with a \code{require} statement.
+
+\begin{verbatim}
+function addFunds(uint256 _amount) {
+  // require(_amount < 1000000 && funds < 1000000);
+  funds += _amount;
+}
+\end{verbatim}
+
+One of the most important features is the ability to check safety properties
+statically, by using Solidity's \code{assert}.
+%
+The following example code uses an \code{assert} to check the equivalence of
+two computations, once written using control-flow statements, once as a direct
+Boolean formula.
+
+\begin{verbatim}
+function f(bool a, bool b) public pure {
+  bool c;
+  if (a) {
+    if (b) c = false;
+    else c = true;
+  }
+  else {
+    if (b) c = true;
+    else c = false;
+  }
+  assert(c != ((a && !b) || (!a && b)));
+}
+\end{verbatim}
+
+Note that the assertion will be reported to fail with the valuation
+\code{a = false, b = false, c = false}.
+%
+The safe condition would be
+\code{assert(c == ((a \&\& !b) || (!a \&\& b)));}.
 
 \subsection{Future Plans}
 
@@ -387,25 +428,57 @@ contract.
 Similarly to the previous example, it is not possible to prove the last
 assertion without the knowledge about the invariant.
 
-
 \end{paragraph}
 
-\begin{paragraph}{Modifiers as pre-postconditions.}
-A feature that promises to help the computation of state variable invariants
-(discussed above) is pre and postconditions for functions.
-%
-The first challenge is finding a good syntax to represent the conditions.
+\begin{paragraph}{Modifiers as pre and postconditions.}
+An orthogonal approach to automatically inferred invariants is to provide a
+good syntax so that Solidity programmers can explicitly state pre and
+postconditions of functions.
 %
 Modifiers (Sec.\ref{section:solidity}) are a natural candidate for that, given
 their ability to behave as patterns that wrap functions.
 %
-The modifier \code{onlyOwner} introduced in Sec.~\ref{section:solidity} acts
-exactly as a precondition for any function that uses it, therefore we can
-encode it as the predicate $onlyOwner(f)$ which is conjoined with the encoding
-of function \code{f}.
+In the following code, the modifier \code{safeBalance} states pre and
+postconditions for the \code{transfer} function in the \code{Token} contract
+(Sec.~\ref{section:solidity}), ensuring that the concrete value of
+\code{totalSupply} does not change after a token transfer.
+
+\begin{verbatim}
+modifier safeBalance {
+  require(totalSupply == 10000);
+  _;
+  assert(totalSupply == 10000);
+}
+
+function transfer(address _to, uint256 _value) safeBalance {
+  ...
+}
+\end{verbatim}
+\end{paragraph}
+
+\begin{paragraph}{Function abstraction.}
+If modifiers are used as pre and postconditions as described above, it could be
+possible to abstract functions based on these modifiers.
 %
-With this feature we intend to compute functions pre and postconditions
-automatically.
+Let \code{zeroAccount} be a function from contract \code{Token} that transfers
+all the tokens that an account holds to another one of their choice.
+%
+Function \code{zeroAccount} should also be sure that the \code{totalSupply} did
+not change.
+
+\begin{verbatim}
+function zeroAccount(address _to) {
+  transfer(_to, balance[msg.sender]);
+  assert(totalSupply == 10000);
+}
+\end{verbatim}
+
+One approach to analyze \code{zeroAccount} is to abstract function
+\code{transfer} by encoding only its modifiers and ignoring its body when
+trying to prove the assertion.
+%
+This query is much cheaper for the SMT solver, and in many cases (as it is in
+this one) it might be enough to prove the assertion.
 \end{paragraph}
 
 \begin{paragraph}{Effective Callback Freeness.}
@@ -413,8 +486,13 @@ The idea of \emph{Effective Callback Freeness} was recently introduced by
 \cite{Grossman}.
 %
 A smart contract $C$ is effectively callback free, if any state change caused
-by an internal callback can also be caused by an execution that does not have this callback.
-\todo{should we rephrase this now that we know more?}
+by a callback in $C$ can also be caused by an execution that does not have this
+callback.
+%
+Straightforward examples include a contract that uses a mutex mechanism to
+disallow state changes if the function is called as a callback, and the general
+pattern where all functions perform state changes before they call other
+contracts.
 %
 The authors show that most of the contracts deployed on Ethereum have this
 property.
